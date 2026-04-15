@@ -1,4 +1,3 @@
-
 import streamlit as st
 
 # ==========================================
@@ -59,8 +58,11 @@ st.markdown("""
     .ans-wrong { background-color: #fee2e2; border: 1px solid #ef4444; padding: 12px; border-radius: 8px; color: #991b1b; margin-top: 15px; font-weight: 600;}
     .explanation { background-color: #f1f5f9; padding: 12px; border-radius: 8px; color: #334155; font-size: 0.95rem; margin-top: 5px; line-height: 1.5; border-left: 4px solid #64748b;}
     
-    /* Fix Radio Button Text Color for Light Theme */
-    .stRadio label { color: #0f172a !important; font-weight: 500; }
+    /* 🔥 FIX FOR RADIO BUTTON TEXT INVISIBILITY 🔥 */
+    .stRadio p, .stRadio div, .stRadio label span, div[role="radiogroup"] * { 
+        color: #0f172a !important; 
+        font-weight: 500 !important; 
+    }
     
     /* BUTTON STYLING */
     div[data-testid="stButton"] > button {
@@ -406,9 +408,9 @@ elif st.session_state.page == 'final_exam':
         if selected_option:
             st.session_state.user_answers[i] = selected_option
             if selected_option == q["answer"]:
-                st.markdown(f"<div class='ans-correct'>✓ OHHH YES, PUSH MORE HARDER!</div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='ans-correct'>✓ Correct!</div>", unsafe_allow_html=True)
             else:
-                st.markdown(f"<div class='ans-wrong'>✗ OHHH NO.<br><br><b>Correct Answer:</b> {q['answer']}</div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='ans-wrong'>✗ Incorrect.<br><br><b>Correct Answer:</b> {q['answer']}</div>", unsafe_allow_html=True)
             st.markdown(f"<div class='explanation'><b>Explanation:</b> {q['solution']}</div>", unsafe_allow_html=True)
             
         st.write("---")
@@ -416,3 +418,34 @@ elif st.session_state.page == 'final_exam':
     if st.button("Submit Final Exam", type="primary"):
         change_page('final_results')
         st.rerun()
+
+# --- RESULTS PAGE ---
+elif st.session_state.page in ['results', 'final_results']:
+    if st.session_state.page == 'results':
+        week = st.session_state.current_week
+        questions = quiz_data[week]
+    else:
+        questions = [q for w in quiz_data.values() for q in w]
+        week = "Final Exam"
+    
+    score = 0
+    for i, q in enumerate(questions):
+        user_ans = st.session_state.user_answers.get(i, "")
+        if user_ans == q["answer"]:
+            score += 1
+            
+    percentage = (score / len(questions)) * 100 if len(questions) > 0 else 0
+    
+    st.markdown(f"<h2 style='text-align:center; color:#1e3a8a;'>Quiz Complete!</h2>", unsafe_allow_html=True)
+    st.markdown(f"<h1 style='text-align:center; color:#ef4444;'>{score} / {len(questions)}</h1>", unsafe_allow_html=True)
+    st.markdown(f"<p style='text-align:center; color:#334155; font-size:1.1rem; font-weight:bold;'>You scored {percentage:.0f}%</p>", unsafe_allow_html=True)
+    
+    col1, col2, col3, col4 = st.columns([1, 1, 1, 1])
+    with col2:
+        if st.button("Retry Quiz", type="primary"):
+            start_quiz(week)
+            st.rerun()
+    with col3:
+        if st.button("Back to Home", key="btn_home_res", type="primary"):
+            change_page('home')
+            st.rerun()
